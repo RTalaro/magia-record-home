@@ -1492,6 +1492,33 @@ function mypageMenuChoreography(open) {
 
 window.mypageMenuChoreography = mypageMenuChoreography;
 
+async function setMyPagePortraitMode(enabled) {
+    if (!window.location.hash.startsWith('#/MyPage')) return false;
+
+    const portrait = Boolean(enabled);
+    cancelMenuChoreography();
+    scenarioPlayer?.stop();
+    cancelOutfitChanges();
+
+    const config = window.__QUOTES_CONFIG || (window.__QUOTES_CONFIG = {});
+    config.viewMode = portrait ? 'portrait' : 'home16';
+
+    const sideMenu = document.getElementById('sideMenu');
+    config.xOffset = portrait
+        ? 0
+        : sideMenu?.classList.contains('anim') ? HOME_X_OFFSET : 0;
+
+    if (typeof window.updateViewerViewport === 'function') {
+        window.updateViewerViewport();
+    }
+
+    if (!homeActive || !homeReady || !state.currentModel) return true;
+    await respawnHomeModel();
+    return true;
+}
+
+window.setMyPagePortraitMode = setMyPagePortraitMode;
+
 async function revealHomeScreen() {
     if (!homeActive || !homeReady || homeRevealed) return;
 

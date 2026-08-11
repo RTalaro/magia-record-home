@@ -217,6 +217,7 @@ function updateViewport() {
     };
 }
 
+window.updateViewerViewport = updateViewport;
 updateViewport();
 window.addEventListener('resize', updateViewport);
 

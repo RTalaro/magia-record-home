@@ -110,15 +110,18 @@ export async function getDualUnitConfig(charaId, live2dId) {
     }
 
     const detectedModels = new Set([defaultModelId]);
+    const coOccurringCount = new Map();
     const zOrderMap = new Map();
     if (scenarioJson && scenarioJson.story) {
         Object.values(scenarioJson.story).forEach(steps => {
             if (Array.isArray(steps)) {
                 steps.forEach(step => {
                     if (Array.isArray(step.chara)) {
+                        const stepIds = [];
                         step.chara.forEach(c => {
                             if (c.id != null) {
                                 const idStr = String(c.id);
+                                stepIds.push(idStr);
                                 detectedModels.add(idStr);
                                 if (typeof c.zOrder === 'number') {
                                     zOrderMap.set(idStr, c.zOrder);
@@ -128,6 +131,13 @@ export async function getDualUnitConfig(charaId, live2dId) {
                                 }
                             }
                         });
+                        if (stepIds.includes(defaultModelId)) {
+                            stepIds.forEach(idStr => {
+                                if (idStr !== defaultModelId && idStr.startsWith(String(charaId))) {
+                                    coOccurringCount.set(idStr, (coOccurringCount.get(idStr) || 0) + 1);
+                                }
+                            });
+                        }
                     }
                 });
             }
@@ -135,7 +145,15 @@ export async function getDualUnitConfig(charaId, live2dId) {
     }
 
     const modelIdList = Array.from(detectedModels);
-    const isDual = (live2dIdStr === '00' && modelIdList.length > 1);
+    let secondaryId = null;
+    let secondaryCooccur = 0;
+    for (const [idStr, count] of coOccurringCount) {
+        if (count > secondaryCooccur) {
+            secondaryCooccur = count;
+            secondaryId = idStr;
+        }
+    }
+    const isDual = (live2dIdStr === '00' && secondaryId !== null);
 
     if (!isDual) {
         return {
@@ -145,8 +163,7 @@ export async function getDualUnitConfig(charaId, live2dId) {
         };
     }
 
-    const primaryId = modelIdList[0];
-    const secondaryId = modelIdList[1];
+    const primaryId = defaultModelId;
     const primaryZOrder = zOrderMap.get(String(primaryId)) ?? zOrderMap.get('pos_0') ?? 0;
     const secondaryZOrder = zOrderMap.get(String(secondaryId)) ?? zOrderMap.get('pos_1') ?? 0;
 

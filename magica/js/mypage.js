@@ -35,6 +35,13 @@ let pressedEl = null;
 let bannerActive = false;
 let bannerIndex = 0;
 let bannerLength = 0;
+let portraitActive = false;
+let portraitRequest = 0;
+let uiHidden = false;
+let uiHidePrompt = null;
+let uiHideRestoreTimer = null;
+let uiHideDisplayState = null;
+let live2dMenuRevealTimer = null;
 
 function fillDemoData() {
     const present = document.getElementById('present');
@@ -128,6 +135,10 @@ export function mypageMenuShow() {
     myPage.classList.remove('menuHide');
     myPage.classList.add('menuShow');
 
+    const live2dMenu = document.getElementById('live2dMenu');
+    clearTimeout(live2dMenuRevealTimer);
+    if (live2dMenu) live2dMenu.classList.remove('show');
+
     const status = document.querySelector('#globalMenu .user #status');
     if (status) {
         status.classList.remove('myPageHide');
@@ -152,6 +163,17 @@ export function mypageMenuHide() {
     myPage.classList.remove('menuShow');
     myPage.classList.add('menuHide');
 
+    if (!uiHidden) {
+        const live2dMenu = document.getElementById('live2dMenu');
+        if (live2dMenu) {
+            clearTimeout(live2dMenuRevealTimer);
+            live2dMenuRevealTimer = setTimeout(() => {
+                live2dMenu.classList.add('show');
+                live2dMenuRevealTimer = null;
+            }, 700);
+        }
+    }
+
     const status = document.querySelector('#globalMenu .user #status');
     if (status) {
         status.classList.remove('myPageShow');
@@ -169,7 +191,117 @@ function clearPress() {
     }
 }
 
+function setUiHiddenDisplay(hidden) {
+    const menu = document.getElementById('menu');
+    const live2dMenu = document.getElementById('live2dMenu');
+    if (!menu || !live2dMenu) return;
+
+    if (hidden) {
+        uiHideDisplayState = {
+            menu: menu.style.display,
+            live2dMenu: live2dMenu.style.display
+        };
+        menu.style.display = 'none';
+        live2dMenu.style.display = 'none';
+        return;
+    }
+
+    const displayState = uiHideDisplayState || { menu: '', live2dMenu: '' };
+    menu.style.display = displayState.menu;
+    live2dMenu.style.display = displayState.live2dMenu;
+    uiHideDisplayState = null;
+}
+
+function clearUiHideRestoreTimer() {
+    if (uiHideRestoreTimer) {
+        clearTimeout(uiHideRestoreTimer);
+        uiHideRestoreTimer = null;
+    }
+}
+
+function restoreHiddenUi() {
+    clearUiHideRestoreTimer();
+    if (!uiHidden) return;
+    uiHidden = false;
+    setUiHiddenDisplay(false);
+}
+
+function onUiHideLongPressStart(e) {
+    if (!uiHidden || !e.isPrimary) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    clearUiHideRestoreTimer();
+    uiHideRestoreTimer = setTimeout(restoreHiddenUi, 800);
+}
+
+function onUiHideLongPressEnd(e) {
+    if (!uiHidden || !e.isPrimary) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    clearUiHideRestoreTimer();
+}
+
+function showUiHidePrompt() {
+    if (uiHidePrompt || uiHidden) return;
+
+    let popupArea = document.getElementById('popupArea');
+    if (!popupArea) {
+        popupArea = document.createElement('div');
+        popupArea.id = 'popupArea';
+        document.body.appendChild(popupArea);
+    }
+
+    uiHidePrompt = document.createElement('div');
+    uiHidePrompt.className = 'popupContent open uiHidePop';
+    uiHidePrompt.innerHTML = `
+        <div class="popupInner">
+            <div class="popupTextArea">
+                Hide the on-screen controls?<br><br>
+                Press and hold the screen to show them again.
+                <div class="uiHideActions">
+                    <button type="button" class="uiHideCancel">Cancel</button>
+                    <button type="button" class="uiHideConfirm">Hide</button>
+                </div>
+            </div>
+        </div>`;
+    popupArea.appendChild(uiHidePrompt);
+    uiHidePrompt.querySelector('.uiHideCancel').addEventListener('click', closeUiHidePrompt);
+    uiHidePrompt.querySelector('.uiHideConfirm').addEventListener('click', confirmUiHide);
+}
+
+function closeUiHidePrompt() {
+    if (!uiHidePrompt) return;
+    const prompt = uiHidePrompt;
+    uiHidePrompt = null;
+    prompt.classList.remove('open');
+    prompt.classList.add('close');
+    setTimeout(() => prompt.remove(), 200);
+}
+
+function confirmUiHide() {
+    closeUiHidePrompt();
+    uiHidden = true;
+    setUiHiddenDisplay(true);
+}
+
+async function togglePortrait() {
+    const request = ++portraitRequest;
+    const next = !portraitActive;
+    if (typeof window.setMyPagePortraitMode !== 'function') return;
+    const accepted = await window.setMyPagePortraitMode(next);
+    if (request !== portraitRequest || accepted === false) return;
+
+    portraitActive = next;
+    document.getElementById('MyPage')?.classList.toggle('portrait', portraitActive);
+    document.getElementById('live2dMenu')?.classList.toggle('portrait', portraitActive);
+    document.getElementById('wearWrap')?.classList.toggle('portrait', portraitActive);
+}
+
 function onPointerDown(e) {
+    if (uiHidden) {
+        onUiHideLongPressStart(e);
+        return;
+    }
     const el = e.target.closest(COLUMN_OVERLAY);
     if (!el) return;
     clearPress();
@@ -177,7 +309,11 @@ function onPointerDown(e) {
     el.classList.add('touch');
 }
 
-function onPointerUp() {
+function onPointerUp(e) {
+    if (uiHidden) {
+        onUiHideLongPressEnd(e);
+        return;
+    }
     clearPress();
 }
 
@@ -193,6 +329,22 @@ async function openEtcPopup() {
 }
 
 function onClick(e) {
+    const portraitButton = e.target.closest('#portraitBtn');
+    if (portraitButton && !uiHidden) {
+        e.preventDefault();
+        e.stopPropagation();
+        togglePortrait();
+        return;
+    }
+
+    const uiHideButton = e.target.closest('#uiHideBtn');
+    if (uiHideButton && !uiHidden) {
+        e.preventDefault();
+        e.stopPropagation();
+        showUiHidePrompt();
+        return;
+    }
+
     if (!e.target.closest('#config')) return;
     e.preventDefault();
     e.stopPropagation();
@@ -202,9 +354,9 @@ function onClick(e) {
 function bindEvents() {
     if (bound) return;
     bound = true;
-    document.addEventListener('pointerdown', onPointerDown, true);
-    document.addEventListener('pointerup', onPointerUp, true);
-    document.addEventListener('pointercancel', onPointerUp, true);
+    window.addEventListener('pointerdown', onPointerDown, true);
+    window.addEventListener('pointerup', onPointerUp, true);
+    window.addEventListener('pointercancel', onPointerUp, true);
     document.addEventListener('click', onClick);
     document.addEventListener('animationend', onBannerAnimationEnd);
 }

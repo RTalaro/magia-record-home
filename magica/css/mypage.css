@@ -203,6 +203,16 @@
   filter: brightness(100%);
 }
 
+#MyPage #live2dMenu #uiHideBtn {
+  background: url("../resource/image_web/page/mypage/btn_ui_off.png") left top no-repeat;
+  background-size: 100% 100%;
+}
+
+#MyPage #live2dMenu #portraitBtn {
+  background: url("../resource/image_web/page/mypage/btn_portrait.png") left top no-repeat;
+  background-size: 100% 100%;
+}
+
 #MyPage #live2dMenu #live2dBtn {
   width: 88px;
   height: 78px;
@@ -226,6 +236,96 @@
   pointer-events: none;
   -webkit-filter: brightness(60%);
   filter: brightness(60%);
+}
+
+#MyPage #live2dMenu #cameraLinkBtn {
+  display: none !important;
+}
+
+#MyPage #live2dMenu.portrait {
+  height: 262px;
+  top: -73px;
+  right: 105px;
+  bottom: inherit;
+  left: inherit;
+  -webkit-animation: portraitMenuShow 0.25s ease 0s 1 alternate;
+  animation: portraitMenuShow 0.25s ease 0s 1 alternate;
+  -webkit-animation-fill-mode: forwards;
+  animation-fill-mode: forwards;
+}
+
+#MyPage #live2dMenu.portrait #portraitBtn {
+  background-image: url("../resource/image_web/page/mypage/btn_landscape.png");
+}
+
+#MyPage #live2dMenu.portrait #cameraLinkBtn {
+  display: none !important;
+}
+
+#MyPage.menuHide .live2dArea.portrait {
+  width: 1024px;
+  height: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+#MyPage #wearWrap.portrait {
+  right: 100px;
+  -webkit-animation: portraitMenuShow 0.25s ease 0s 1 alternate;
+  animation: portraitMenuShow 0.25s ease 0s 1 alternate;
+  -webkit-animation-fill-mode: forwards;
+  animation-fill-mode: forwards;
+}
+
+#popupArea .uiHidePop .popupInner {
+  width: 100%;
+  max-width: 900px;
+  height: 180px;
+  margin: 0 auto;
+  top: calc(50% - 90px);
+  left: 0;
+  border: none;
+  border-radius: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.7) 50%, rgba(0, 0, 0, 0));
+  color: #ffffff;
+}
+
+#popupArea .uiHidePop .popupInner .popupTextArea {
+  width: 100%;
+  height: 180px;
+  margin: 0;
+  color: #ffffff;
+  font-family: 'Open Sans', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+#popupArea .uiHidePop.portrait .popupInner {
+  transform: rotate(270deg);
+}
+
+@-webkit-keyframes portraitMenuShow {
+  0% {
+    -webkit-transform: translateZ(0) rotate(270deg);
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: translateZ(0) rotate(270deg);
+    opacity: 1;
+  }
+}
+
+@keyframes portraitMenuShow {
+  0% {
+    transform: translateZ(0) rotate(270deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateZ(0) rotate(270deg);
+    opacity: 1;
+  }
 }
 
 #MyPage #mypageBanner {
