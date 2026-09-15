@@ -8,8 +8,24 @@ const path = require('path');
 
 const REPO = path.resolve(__dirname, '..');
 
-// Files to check
-const FILES = ['model.js', 'model-assets.js', 'model-follow.js', 'model-snapshot.js', 'model-scenario.js', 'quotes-sequence.js', 'ui.js'];
+// Files to check (repo-relative paths)
+const FILES = [
+  'magica/js/viewer/model.js',
+  'magica/js/viewer/model-assets.js',
+  'magica/js/viewer/model-follow.js',
+  'magica/js/viewer/model-snapshot.js',
+  'magica/js/viewer/model-scenario.js',
+  'magica/js/viewer/quotes-sequence.js',
+  'magica/js/viewer/ui.js',
+  'magica/js/viewer/main.js',
+  'magica/js/viewer/chara-collection.js',
+  'magica/js/viewer/quotes-main.js',
+  'magica/js/router.js',
+  'magica/js/home-menu.js',
+  'magica/js/mypage.js',
+  'magica/js/view-loader.js',
+  'lib/cocos-to-pixi.js',
+];
 
 // --------------------------------------------------------------------------
 // Parsing helpers
@@ -164,9 +180,14 @@ for (const f of FILES) {
 }
 
 // 3. Specifically print ui.js's imports from model.js
-const uiImports = allImportStatements['ui.js'].filter(imp => imp.source === './model.js');
+const UI_FILE = 'magica/js/viewer/ui.js';
+const MODEL_FILE = 'magica/js/viewer/model.js';
+const uiImports = (allImportStatements[UI_FILE] || []).filter(imp => {
+  const resolved = path.resolve(path.dirname(path.join(REPO, UI_FILE)), imp.source);
+  return resolved === path.join(REPO, MODEL_FILE);
+});
 if (uiImports.length) {
-  console.log(`\n=== ui.js imports from model.js ===`);
+  console.log(`\n=== ${UI_FILE} imports from ${MODEL_FILE} ===`);
   for (const imp of uiImports) {
     console.log(`  { ${imp.imported.map(i => i.importedName).join(', ')} }`);
   }
@@ -182,14 +203,18 @@ const failures = [];
 
 for (const f of FILES) {
   for (const imp of allImportStatements[f]) {
-    // Resolve relative path: e.g. './model.js' from f's directory
     const sourceRel = imp.source;
     if (!sourceRel.startsWith('.')) {
       console.log(`  WARN: non-relative import in ${f}: '${sourceRel}' — skipping check`);
       continue;
     }
-    // All files are in same dir, so we can resolve directly
-    const sourceFile = sourceRel.replace(/^\.\//, '');
+    // Resolve relative path against the importing file's own directory,
+    // e.g. '../router.js' from 'magica/js/viewer/quotes-main.js'
+    // resolves to 'magica/js/router.js', and
+    // '../../../lib/cocos-to-pixi.js' resolves to 'lib/cocos-to-pixi.js'.
+    const importerAbs = path.join(REPO, f);
+    const resolvedAbs = path.resolve(path.dirname(importerAbs), sourceRel);
+    const sourceFile = path.relative(REPO, resolvedAbs).replace(/\\/g, '/');
     const exportSet = allExports[sourceFile];
     if (!exportSet) {
       console.log(`  ERROR: Source file not in check set: ${sourceFile} (imported by ${f})`);
