@@ -1,7 +1,7 @@
 // js/router.js — Hash router for quotes SPA
 
 import { loadViewTemplate } from './view-loader.js';
-import { renderCharaCollectionGrid } from '../../chara-collection.js';
+import { renderCharaCollectionGrid } from '../viewer/chara-collection.js';
 import { initHomeMenu, resetHomeMenu } from './home-menu.js';
 import { initMyPage, resetMyPage } from './mypage.js';
 

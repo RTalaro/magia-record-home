@@ -1,13 +1,14 @@
 // quotes-main.js — quotes.html module entry point
 // Wires up: cocos-to-pixi background, HCA BGM loop, and the default Live2D model.
 // Differences from viewer.html: no controls, no follow-on-click.
-import { loadCocosStudioAssets, CocosStudioArmature } from './lib/cocos-to-pixi.js';
+import { loadCocosStudioAssets, CocosStudioArmature } from '../../../lib/cocos-to-pixi.js';
 import { loadModel, loadAdditionalModel, destroyCurrentModels, state, getOutfitsForCharacter, buildModelId, resolveMaReAssetsBase } from './model.js';
 import { preloadModelToRam, ramFolderCache, setAssetPreloadConnecting } from './model-assets.js';
 import { ScenarioSequencePlayer, preloadScenarioVoices, scenarioCache } from './quotes-sequence.js';
 import { fetchScenarioJson, checkScenarioUrlExists, getDualUnitConfig } from './model-scenario.js';
 import { renderCharaCollectionGrid } from './chara-collection.js';
-import { revealHomeMenu } from './magica/js/home-menu.js';
+import { revealHomeMenu } from '../home-menu.js';
+import { handleRoute } from '../router.js';
 
 let activeVoicePrefix = '00';
 let activeScenarioUrl = '';
@@ -1720,8 +1721,6 @@ function setupBackBtn() {
     if (globalBackBtn) globalBackBtn.onclick = handleBack;
     if (backBtn) backBtn.onclick = handleBack;
 }
-
-import { handleRoute } from './magica/js/router.js';
 
 function setupAudioAutoResume() {
     const resume = () => {
