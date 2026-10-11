@@ -902,7 +902,15 @@ async function initFavoriteCharaIcon() {
     if (!base) return;
 
     const root = String(base).replace(/\/$/, '').replace(/\/live2d_v4\/?$/, '');
-    const url = `${root}/card/image/card_${charaId}1_f.png`;
+
+    let url = `${root}/card/image/card_${charaId}5_f.png`;
+    try {
+        const resp = await fetch(url);
+        if (!resp.ok) {
+            url = `${root}/card/image/card_${charaId}4_f.png`;
+        }
+    } catch (e) {    }
+
     img.addEventListener('error', () => {
         img.removeAttribute('src');
         img.style.display = 'none';
