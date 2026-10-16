@@ -1102,13 +1102,14 @@ async function loadOutfitModels(charaId, live2dId, token, allowedExpressions = n
         const secondaryId = dualConfig.secondaryId;
         const primaryZOrder = dualConfig.primaryZOrder;
         const secondaryZOrder = dualConfig.secondaryZOrder;
+        const xOverride = !window.location.hash.startsWith('#/MyPage') ? [104, 320] : [229, 445]
 
         // Load Primary Model (pos 0)
         await loadModel(primaryId, {
             interactive: false,
             allowedExpressions,
             allowedMotions,
-            xOverride: 104.0,
+            xOverride: xOverride[0],
             zOrder: primaryZOrder
         });
 
@@ -1122,7 +1123,7 @@ async function loadOutfitModels(charaId, live2dId, token, allowedExpressions = n
             interactive: false,
             allowedExpressions,
             allowedMotions,
-            xOverride: 320.0,
+            xOverride: xOverride[1],
             zOrder: secondaryZOrder
         });
 
